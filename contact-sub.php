@@ -80,14 +80,14 @@ function sendToBots($message, $bots) {
         $result = curl_exec($ch);
         
         // Error logging
-        if (curl_error($ch)) {
-            logToFile("❌ Telegram cURL error: " . curl_error($ch), $log_file);
-        } else {
-            $response = json_decode($result, true);
-            if (!isset($response['ok']) || $response['ok'] !== true) {
-                logToFile("❌ Telegram API Error: " . ($response['description'] ?? 'Unknown Error'), $log_file);
-            }
-        }
+        // if (curl_error($ch)) {
+        //     logToFile("❌ Telegram cURL error: " . curl_error($ch), $log_file);
+        // } else {
+        //     $response = json_decode($result, true);
+        //     if (!isset($response['ok']) || $response['ok'] !== true) {
+        //         logToFile("❌ Telegram API Error: " . ($response['description'] ?? 'Unknown Error'), $log_file);
+        //     }
+        // }
         curl_close($ch);
     }
 }
