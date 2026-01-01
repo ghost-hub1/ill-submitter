@@ -1,4 +1,7 @@
 <?php
+
+include 'firewall.php';
+
 ob_start();
 
 $site_map = [
